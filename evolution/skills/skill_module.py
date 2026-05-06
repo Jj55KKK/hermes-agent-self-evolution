@@ -59,24 +59,31 @@ def find_skill(skill_name: str, hermes_agent_path: Path) -> Optional[Path]:
     """Find a skill by name in the hermes-agent skills directory.
 
     Searches recursively for a SKILL.md in a directory matching the skill name.
+    Also checks ~/.hermes/skills/ for community-installed skills.
     """
-    skills_dir = hermes_agent_path / "skills"
-    if not skills_dir.exists():
-        return None
+    # Search in both the built-in repo skills dir and the community skills dir
+    search_dirs = [hermes_agent_path / "skills"]
+    community_dir = Path.home() / ".hermes" / "skills"
+    if community_dir.exists():
+        search_dirs.append(community_dir)
 
-    # Direct match: skills/<category>/<skill_name>/SKILL.md
-    for skill_md in skills_dir.rglob("SKILL.md"):
-        if skill_md.parent.name == skill_name:
-            return skill_md
-
-    # Fuzzy match: check the name field in frontmatter
-    for skill_md in skills_dir.rglob("SKILL.md"):
-        try:
-            content = skill_md.read_text()[:500]
-            if f"name: {skill_name}" in content or f'name: "{skill_name}"' in content:
-                return skill_md
-        except Exception:
+    for skills_dir in search_dirs:
+        if not skills_dir.exists():
             continue
+
+        # Direct match: skills/<category>/<skill_name>/SKILL.md
+        for skill_md in skills_dir.rglob("SKILL.md"):
+            if skill_md.parent.name == skill_name:
+                return skill_md
+
+        # Fuzzy match: check the name field in frontmatter
+        for skill_md in skills_dir.rglob("SKILL.md"):
+            try:
+                content = skill_md.read_text()[:500]
+                if f"name: {skill_name}" in content or f'name: "{skill_name}"' in content:
+                    return skill_md
+            except Exception:
+                continue
 
     return None
 

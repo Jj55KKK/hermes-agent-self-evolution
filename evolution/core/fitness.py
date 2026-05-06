@@ -136,6 +136,11 @@ def skill_fitness_metric(example: dspy.Example, prediction: dspy.Prediction, tra
     return min(1.0, max(0.0, score))
 
 
+def gepa_fitness_metric(gold, pred, trace=None, pred_name=None, pred_trace=None) -> float:
+    """GEPA-compatible wrapper: maps 5-arg signature to 3-arg metric."""
+    return skill_fitness_metric(gold, pred, trace=trace)
+
+
 def _parse_score(value) -> float:
     """Parse a score value, handling various LLM output formats."""
     if isinstance(value, (int, float)):
